@@ -1,0 +1,202 @@
+﻿<!-- Detailed Test Modal -->
+<div class="modal fade" id="detailedTestModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="fas fa-microscope"></i> Detailed Diagnostic Test — <span id="detailedTestDeviceName"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Live progress + stat strip -->
+                <div class="p-3 border-bottom bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span id="detailedTestStatusLabel" class="fw-bold">Preparing test...</span>
+                        <span id="detailedTestCounter" class="text-muted small">0 / 0</span>
+                    </div>
+                    <div class="progress" style="height: 20px;">
+                        <div id="detailedTestProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-dark"
+                             style="width: 0%;" role="progressbar">
+                            0%
+                        </div>
+                    </div>
+                    <div class="row mt-2 text-center" id="detailedTestStatStrip">
+                        <div class="col">
+                            <div class="fs-5 fw-bold text-success" id="statPassed">0</div>
+                            <div class="small text-muted">Passed</div>
+                        </div>
+                        <div class="col">
+                            <div class="fs-5 fw-bold text-danger" id="statFailed">0</div>
+                            <div class="small text-muted">Failed</div>
+                        </div>
+                        <div class="col">
+                            <div class="fs-5 fw-bold" id="statAvgMs">–</div>
+                            <div class="small text-muted">Avg (ms)</div>
+                        </div>
+                        <div class="col">
+                            <div class="fs-5 fw-bold" id="statMinMs">–</div>
+                            <div class="small text-muted">Fastest</div>
+                        </div>
+                        <div class="col">
+                            <div class="fs-5 fw-bold" id="statMaxMs">–</div>
+                            <div class="small text-muted">Slowest</div>
+                        </div>
+                        <div class="col">
+                            <div class="fs-5 fw-bold" id="statTotalMs">–</div>
+                            <div class="small text-muted">Total Time</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Flow Diagram -->
+                <div class="p-2 border-bottom bg-light">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center py-1">
+                                    <span><i class="fas fa-project-diagram"></i> Communication Flow</span>
+                                    <span id="flowStatus" class="badge bg-warning">⏳ Waiting...</span>
+                                </div>
+                                <div class="card-body" style="overflow-x: auto; padding: 8px;">
+                                    <svg id="flowDiagram" viewBox="0 0 800 150" style="width: 100%; height: auto; min-height: 120px;">
+                                        <defs>
+                                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                                                <polygon points="0 0, 10 3.5, 0 7" fill="#6c757d" />
+                                            </marker>
+                                            <marker id="arrowhead-error" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                                                <polygon points="0 0, 10 3.5, 0 7" fill="#dc3545" />
+                                            </marker>
+                                            <marker id="arrowhead-success" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                                                <polygon points="0 0, 10 3.5, 0 7" fill="#28a745" />
+                                            </marker>
+                                        </defs>
+
+                                        <!-- Background flow line -->
+                                        <line x1="120" y1="60" x2="680" y2="60" stroke="#6c757d" stroke-width="2" stroke-dasharray="5,5" />
+
+                                        <!-- Step 1: Validation -->
+                                        <circle id="flowStep1" cx="120" cy="60" r="26" fill="#6c757d" stroke="#343a40" stroke-width="2" />
+                                        <text x="120" y="65" text-anchor="middle" fill="white" font-size="13" font-weight="bold">1</text>
+                                        <text x="120" y="98" text-anchor="middle" fill="#6c757d" font-size="9">Validation</text>
+                                        <text id="flowStep1Status" x="120" y="112" text-anchor="middle" fill="#6c757d" font-size="8">⏸️</text>
+
+                                        <!-- Arrow 1-2 -->
+                                        <line id="flowArrow1" x1="146" y1="60" x2="200" y2="60" stroke="#6c757d" stroke-width="2" marker-end="url(#arrowhead)" />
+
+                                        <!-- Step 2: Network -->
+                                        <circle id="flowStep2" cx="240" cy="60" r="26" fill="#6c757d" stroke="#343a40" stroke-width="2" />
+                                        <text x="240" y="65" text-anchor="middle" fill="white" font-size="13" font-weight="bold">2</text>
+                                        <text x="240" y="98" text-anchor="middle" fill="#6c757d" font-size="9">Network</text>
+                                        <text id="flowStep2Status" x="240" y="112" text-anchor="middle" fill="#6c757d" font-size="8">⏸️</text>
+
+                                        <!-- Arrow 2-3 -->
+                                        <line id="flowArrow2" x1="266" y1="60" x2="320" y2="60" stroke="#6c757d" stroke-width="2" marker-end="url(#arrowhead)" />
+
+                                        <!-- Step 3: Modbus -->
+                                        <circle id="flowStep3" cx="360" cy="60" r="26" fill="#6c757d" stroke="#343a40" stroke-width="2" />
+                                        <text x="360" y="65" text-anchor="middle" fill="white" font-size="13" font-weight="bold">3</text>
+                                        <text x="360" y="98" text-anchor="middle" fill="#6c757d" font-size="9">Modbus</text>
+                                        <text id="flowStep3Status" x="360" y="112" text-anchor="middle" fill="#6c757d" font-size="8">⏸️</text>
+
+                                        <!-- Arrow 3-4 -->
+                                        <line id="flowArrow3" x1="386" y1="60" x2="440" y2="60" stroke="#6c757d" stroke-width="2" marker-end="url(#arrowhead)" />
+
+                                        <!-- Step 4: Register -->
+                                        <circle id="flowStep4" cx="480" cy="60" r="26" fill="#6c757d" stroke="#343a40" stroke-width="2" />
+                                        <text x="480" y="65" text-anchor="middle" fill="white" font-size="13" font-weight="bold">4</text>
+                                        <text x="480" y="98" text-anchor="middle" fill="#6c757d" font-size="9">Register</text>
+                                        <text id="flowStep4Status" x="480" y="112" text-anchor="middle" fill="#6c757d" font-size="8">⏸️</text>
+
+                                        <!-- Arrow 4-end -->
+                                        <line id="flowArrow4" x1="506" y1="60" x2="560" y2="60" stroke="#6c757d" stroke-width="2" marker-end="url(#arrowhead)" />
+
+                                        <!-- End point -->
+                                        <circle id="flowEnd" cx="590" cy="60" r="16" fill="#6c757d" stroke="#343a40" stroke-width="2" />
+                                        <text x="590" y="65" text-anchor="middle" fill="white" font-size="11">✔</text>
+                                        <text x="590" y="90" text-anchor="middle" fill="#6c757d" font-size="8">Done</text>
+
+                                        <!-- Legend -->
+                                        <rect x="650" y="35" width="10" height="10" fill="#28a745" rx="2" />
+                                        <text x="666" y="44" fill="#28a745" font-size="9">Pass</text>
+                                        <rect x="650" y="50" width="10" height="10" fill="#dc3545" rx="2" />
+                                        <text x="666" y="59" fill="#dc3545" font-size="9">Fail</text>
+                                        <rect x="650" y="65" width="10" height="10" fill="#ffc107" rx="2" />
+                                        <text x="666" y="74" fill="#ffc107" font-size="9">Run</text>
+                                        <rect x="650" y="80" width="10" height="10" fill="#6c757d" rx="2" />
+                                        <text x="666" y="89" fill="#6c757d" font-size="9">Wait</text>
+                                        <rect x="650" y="95" width="10" height="10" fill="#17a2b8" rx="2" />
+                                        <text x="666" y="104" fill="#17a2b8" font-size="9">Test</text>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <ul class="nav nav-tabs px-3 pt-2" id="detailedTestTabs">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabLiveLog" type="button">
+                            <i class="fas fa-terminal"></i> Live Log
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabRootCause" type="button">
+                            <i class="fas fa-magnifying-glass-chart"></i> Root Cause <span id="rootCauseBadge" class="badge bg-danger d-none">0</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabResults" type="button">
+                            <i class="fas fa-table"></i> Results &amp; Timing
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content p-3">
+                    <!-- Live Log tab -->
+                    <div class="tab-pane fade show active" id="tabLiveLog">
+                        <div id="detailedTestLog"
+                             class="bg-dark text-light p-3 font-monospace small"
+                             style="height: 350px; overflow-y: auto; white-space: pre-wrap; border-radius: 4px;">
+                        </div>
+                    </div>
+
+                    <!-- Root Cause tab -->
+                    <div class="tab-pane fade" id="tabRootCause">
+                        <div id="detailedTestRootCause">
+                            <div class="text-muted text-center py-4">Root cause analysis will appear here once the test completes.</div>
+                        </div>
+                    </div>
+
+                    <!-- Results tab -->
+                    <div class="tab-pane fade" id="tabResults">
+                        <div style="max-height: 380px; overflow-y: auto;">
+                            <table class="table table-sm table-striped table-bordered" id="detailedResultsTable">
+                                <thead class="table-light" style="position: sticky; top: 0;">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Address</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Value</th>
+                                        <th>Duration (ms)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailedResultsBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger d-none" id="cancelDetailedTestBtn">
+                    <i class="fas fa-stop"></i> Cancel Test
+                </button>
+                <button type="button" class="btn btn-outline-secondary d-none" id="exportLogBtn">
+                    <i class="fas fa-download"></i> Export Log
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -62,7 +62,7 @@ namespace ProtocolTester.Services
             }
         }
 
-        // ==================== PRIVATE HELPERS ====================
+        //  PRIVATE HELPERS 
 
         private async Task<DiagnosticCheck> TestTcpConnection(ModbusTcpRequest request)
         {
@@ -171,10 +171,10 @@ namespace ProtocolTester.Services
 
                 var stream = client.GetStream();
 
-                // ✅ DYNAMIC: Determine register count based on DataType
+                //  Determine register count based on DataType
                 int registerCount = GetRegisterCount(request.DataType);
 
-                // ✅ Use the correct function code based on DataType/RegisterType
+                //  Use the correct function code based on DataType/RegisterType
                 byte functionCode = GetFunctionCode(request.DataType);
 
                 byte[] modbusRequest = BuildModbusRequest(request.SlaveId, request.TestRegister, registerCount, functionCode);
@@ -266,7 +266,7 @@ namespace ProtocolTester.Services
                     Message = $"Slave {request.SlaveId} is responding"
                 };
 
-                // ✅ DYNAMIC: Parse the value based on DataType and register count
+                //  Parse the value based on DataType and register count
                 if (response.Length >= 9 + (registerCount * 2))
                 {
                     object parsedValue = ParseRegisterValue(response, registerCount, request.DataType);
@@ -301,7 +301,7 @@ namespace ProtocolTester.Services
             }
         }
 
-        // ==================== DYNAMIC REGISTER HANDLING ====================
+        //  DYNAMIC REGISTER HANDLING 
 
         /// <summary>
         /// Determines the number of registers needed based on DataType.

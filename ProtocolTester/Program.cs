@@ -19,7 +19,7 @@ builder.Services.AddScoped<IModbusTestService, ModbusTestService>();
 builder.Services.AddScoped<IDeviceTypeService, DeviceTypeService>();
 
 var app = builder.Build();
-
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthorization();

@@ -289,7 +289,9 @@
                                 slaveId: slaveId,
                                 testRegister: registerAddress,
                                 timeoutMs: readTimeout,
-                                connectionTimeout: connectionTimeout
+                                connectionTimeout: connectionTimeout,
+                                dataType: dataType
+
                             };
 
                             const response = await fetch('/api/modbus/tcp/test', {
