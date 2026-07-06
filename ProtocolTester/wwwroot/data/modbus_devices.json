@@ -1,0 +1,73 @@
+{
+  "Directory": "/tmp/data",
+  "DeviceTypeFileLocation": "/etc/elco35/modbus_devices/modbus_types",
+  "ModbusDevices": [
+    {
+      "Name": "UMG801_TCP",
+      "Id": 0,
+      "DeviceTypeName": "UMG801",
+      "ModbusTcpParameters": {
+        "IpAddress": "192.168.4.226",
+        "Port": 502,
+        "RtuOverTcp": false,
+        "ConnectionTimeout": 3000,
+        "SlaveId": 4,
+        "ReadTimeout": 1000,
+        "WriteTimeout": 1500
+      },
+      "ModbusSerialParameters": null,
+      "Protocol": 1
+    },
+    {
+      "Name": "UMG800_TCP",
+      "Id": 1,
+      "DeviceTypeName": "UMG800",
+      "ModbusTcpParameters": {
+        "IpAddress": "192.168.4.227",
+        "Port": 502,
+        "RtuOverTcp": false,
+        "ConnectionTimeout": 3000,
+        "SlaveId": 2,
+        "ReadTimeout": 1000,
+        "WriteTimeout": 1500
+      },
+      "ModbusSerialParameters": null,
+      "Protocol": 1
+    },
+    {
+      "Name": "UMG804_TCP",
+      "Id": 2,
+      "DeviceTypeName": "UMG804",
+      "ModbusTcpParameters": {
+        "IpAddress": "192.168.4.223",
+        "Port": 502,
+        "RtuOverTcp": false,
+        "ConnectionTimeout": 3000,
+        "SlaveId": 1,
+        "ReadTimeout": 1000,
+        "WriteTimeout": 1500
+      },
+      "ModbusSerialParameters": null,
+      "Protocol": 1
+    },
+    {
+      "Name": "UMG801_RTU",
+      "Id": 3,
+      "DeviceTypeName": "UMG801",
+      "ModbusTcpParameters": null,
+      "ModbusSerialParameters": {
+        "SerialInterface": "RS485",
+        "ComPort": "/dev/ttymxc3",
+        "BaudRate": 38400,
+        "DataBits": 8,
+        "Parity": "None",
+        "StopBits": "One",
+        "Mode": "RTU",
+        "SlaveId": 4,
+        "ReadTimeout": 1000,
+        "WriteTimeout": 1500
+      },
+      "Protocol": 0
+    }
+  ]
+}

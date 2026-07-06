@@ -1,0 +1,557 @@
+﻿@model DeviceViewModel
+
+@{
+    ViewData["Title"] = "Add New Device";
+    var deviceTypes = ViewBag.DeviceTypes as List<DeviceType> ?? new List<DeviceType>();
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Modbus Master > Create New Device</h4>
+                </div>
+                <div class="card-body">
+                    <form id="deviceForm">
+                        <!-- Device Name -->
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-bold">Device Name *</label>
+                            <input asp-for="Name" class="form-control" placeholder="e.g., UMG801_TCP" id="Name" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <!-- Protocol -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Protocol</label>
+                            <select class="form-select" disabled>
+                                <option selected>Modbus_TCP</option>
+                            </select>
+                            <input type="hidden" asp-for="Protocol" value="1" />
+                            <small class="text-muted">TCP only currently</small>
+                        </div>
+
+                        <!-- Device Type -->
+                        <div class="mb-3">
+                            <label asp-for="DeviceTypeName" class="form-label fw-bold">Device Type</label>
+                            <select asp-for="DeviceTypeName" class="form-select" id="DeviceTypeName">
+                                <option value="">-- Select Device Type --</option>
+                                @foreach (var type in deviceTypes)
+                                {
+                                    <option value="@type.Name">@type.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="DeviceTypeName" class="text-danger"></span>
+                            <small class="text-muted">All registers will be tested from device type</small>
+                        </div>
+
+                        <!-- Slave ID -->
+                        <div class="mb-3">
+                            <label asp-for="SlaveId" class="form-label fw-bold">Slave ID *</label>
+                            <input asp-for="SlaveId" class="form-control" type="number" placeholder="1" id="SlaveId" />
+                            <span asp-validation-for="SlaveId" class="text-danger"></span>
+                            <small class="text-muted">Range: 1-247</small>
+                        </div>
+
+                        <!-- Read Timeout -->
+                        <div class="mb-3">
+                            <label asp-for="ReadTimeout" class="form-label fw-bold">Read Timeout (ms) *</label>
+                            <input asp-for="ReadTimeout" class="form-control" type="number" placeholder="1000" id="ReadTimeout" />
+                            <span asp-validation-for="ReadTimeout" class="text-danger"></span>
+                            <small class="text-muted">Range: 100-30000 ms</small>
+                        </div>
+
+                        <!-- Write Timeout -->
+                        <div class="mb-3">
+                            <label asp-for="WriteTimeout" class="form-label fw-bold">Write Timeout (ms) *</label>
+                            <input asp-for="WriteTimeout" class="form-control" type="number" placeholder="1500" id="WriteTimeout" />
+                            <span asp-validation-for="WriteTimeout" class="text-danger"></span>
+                            <small class="text-muted">Range: 100-30000 ms</small>
+                        </div>
+
+                        <!-- Ethernet Settings Section -->
+                        <h5 class="mt-4 mb-3">Ethernet Settings</h5>
+                        <hr />
+
+                        <!-- IP Address -->
+                        <div class="mb-3">
+                            <label asp-for="IpAddress" class="form-label fw-bold">IP Address *</label>
+                            <input asp-for="IpAddress" class="form-control" placeholder="e.g., 192.168.4.226" id="IpAddress" />
+                            <span asp-validation-for="IpAddress" class="text-danger"></span>
+                        </div>
+
+                        <!-- Port -->
+                        <div class="mb-3">
+                            <label asp-for="Port" class="form-label fw-bold">Port *</label>
+                            <input asp-for="Port" class="form-control" type="number" placeholder="502" id="Port" />
+                            <span asp-validation-for="Port" class="text-danger"></span>
+                            <small class="text-muted">Default: 502</small>
+                        </div>
+
+                        <!-- Connection Timeout -->
+                        <div class="mb-3">
+                            <label asp-for="ConnectionTimeout" class="form-label fw-bold">Connection Timeout (ms) *</label>
+                            <input asp-for="ConnectionTimeout" class="form-control" type="number" placeholder="3000" id="ConnectionTimeout" />
+                            <span asp-validation-for="ConnectionTimeout" class="text-danger"></span>
+                            <small class="text-muted">Range: 100-30000 ms</small>
+                        </div>
+
+                        <!-- Test Results -->
+                        <div id="testResults" class="mt-3" style="display:none;">
+                            <hr />
+                            <div id="resultContent"></div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <button type="button" id="testBtn" class="btn btn-warning btn-lg me-2">
+                                    <i class="fas fa-vial"></i> Test All Registers
+                                </button>
+                                <button type="button" id="saveBtn" class="btn btn-success btn-lg me-2" disabled>
+                                    <i class="fas fa-save"></i> Create Device
+                                </button>
+                                <a asp-action="Index" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-arrow-left"></i> Back to List
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#saveBtn').prop('disabled', true);
+
+            
+            function esc(str) {
+                if (str === null || str === undefined) return '';
+                return String(str).replace(/[&<>"']/g, c => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[c]));
+            }
+
+            
+            // VALIDATE FORM
+            
+            function validateForm() {
+                const name = $('#Name').val()?.trim() || '';
+                const deviceType = $('#DeviceTypeName').val() || '';
+                const ip = $('#IpAddress').val()?.trim() || '';
+                const port = parseInt($('#Port').val()) || 0;
+                const slaveId = parseInt($('#SlaveId').val()) || 0;
+                const readTimeout = parseInt($('#ReadTimeout').val()) || 0;
+                const writeTimeout = parseInt($('#WriteTimeout').val()) || 0;
+                const connectionTimeout = parseInt($('#ConnectionTimeout').val()) || 0;
+
+                console.log('Form Values:', {
+                    name: name || '(empty)',
+                    deviceType: deviceType || '(empty)',
+                    ip: ip || '(empty)',
+                    port: port || 0,
+                    slaveId: slaveId || 0,
+                    readTimeout: readTimeout || 0,
+                    writeTimeout: writeTimeout || 0,
+                    connectionTimeout: connectionTimeout || 0
+                });
+
+                if (!name) { console.warn('Name is missing'); return false; }
+                if (!deviceType) { console.warn('Device Type is missing'); return false; }
+                if (!ip) { console.warn('IP Address is missing'); return false; }
+                if (port <= 0) { console.warn('Port is invalid'); return false; }
+                if (slaveId <= 0) { console.warn('Slave ID is invalid'); return false; }
+                if (readTimeout <= 0) { console.warn('Read Timeout is invalid'); return false; }
+                if (writeTimeout <= 0) { console.warn('Write Timeout is invalid'); return false; }
+                if (connectionTimeout <= 0) { console.warn('Connection Timeout is invalid'); return false; }
+
+                console.log('All fields valid');
+                return true;
+            }
+
+            // 
+            // TEST ALL REGISTERS
+            // 
+            $('#testBtn').click(async function() {
+                const btn = $(this);
+                const saveBtn = $('#saveBtn');
+                const resultsDiv = $('#testResults');
+                const contentDiv = $('#resultContent');
+
+                // Validate form first
+                if (!validateForm()) {
+                    resultsDiv.show();
+                    contentDiv.html(`
+                        <div class="alert alert-warning">
+                            <h5><i class="fas fa-exclamation-triangle"></i> Please fill in all required fields.</h5>
+                            <p>Check the console (F12) for more details.</p>
+                        </div>
+                    `);
+                    return;
+                }
+
+                const name = $('#Name').val().trim();
+                const ip = $('#IpAddress').val().trim();
+                const port = parseInt($('#Port').val());
+                const slaveId = parseInt($('#SlaveId').val());
+                const readTimeout = parseInt($('#ReadTimeout').val());
+                const connectionTimeout = parseInt($('#ConnectionTimeout').val());
+                const deviceTypeName = $('#DeviceTypeName').val();
+
+                btn.prop('disabled', true);
+                btn.html('<i class="fas fa-spinner fa-spin"></i> Testing...');
+                saveBtn.prop('disabled', true);
+
+                resultsDiv.show();
+                contentDiv.html(`
+                    <div class="alert alert-info">
+                        <i class="fas fa-spinner fa-spin"></i> Getting mappings for <strong>${esc(name)}</strong>...
+                    </div>
+                `);
+
+                try {
+                    // STEP 1: Get ALL mappings from the device type
+                    let mappings = [];
+
+                    try {
+                        const typeResponse = await fetch(`/api/devicetypes/${encodeURIComponent(deviceTypeName)}`);
+                        if (typeResponse.ok) {
+                            const deviceTypeInfo = await typeResponse.json();
+                            mappings = deviceTypeInfo.mappings || [];
+                            console.log(`Loaded ${mappings.length} mappings for ${deviceTypeName}`);
+                        } else {
+                            const mappingResponse = await fetch(`/api/devicetypes/${encodeURIComponent(deviceTypeName)}/mappings`);
+                            if (mappingResponse.ok) {
+                                mappings = await mappingResponse.json();
+                                console.log(`Loaded ${mappings.length} mappings (fallback)`);
+                            }
+                        }
+                    } catch (error) {
+                        console.warn('Failed to get mappings:', error);
+                    }
+
+                    if (!mappings || mappings.length === 0) {
+                        contentDiv.html(`
+                            <div class="alert alert-warning">
+                                <h5><i class="fas fa-exclamation-triangle"></i> No Mappings Found</h5>
+                                <p>No register mappings found for device type: <strong>${esc(deviceTypeName)}</strong></p>
+                            </div>
+                        `);
+                        btn.prop('disabled', false);
+                        btn.html('<i class="fas fa-vial"></i> Test All Registers');
+                        return;
+                    }
+
+                    // STEP 2: Test each mapping
+                    contentDiv.html(`
+                        <div class="alert alert-info">
+                            <i class="fas fa-spinner fa-spin"></i> Testing <strong>${esc(name)}</strong>...
+                            <p class="text-muted small mt-2">${esc(ip)}:${esc(port)} (Slave ${esc(slaveId)}) - Testing ${mappings.length} registers</p>
+                            <div class="progress mt-2" style="height: 25px;">
+                                <div id="testProgress" class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                                     style="width: 0%;" role="progressbar">0%</div>
+                            </div>
+                        </div>
+                    `);
+
+                    const results = [];
+                    let passedCount = 0;
+                    let failedCount = 0;
+                    // Collect diagnostics per unique failure reason instead of only
+                    const diagnosticsByReason = new Map();
+
+                    // Test each mapping one by one
+                    for (let i = 0; i < mappings.length; i++) {
+                        const mapping = mappings[i];
+                        const registerAddress = mapping.startAddress ?? mapping.StartAddress;
+                        const mappingName = mapping.name || mapping.Name || `Register ${registerAddress}`;
+                        const displayName = mapping.displayName || mapping.DisplayName || mappingName;
+                        const dataType = mapping.dataType || mapping.DataType || 'Unknown';
+                        const unit = mapping.unit || mapping.Unit || '';
+
+                        // Update progress
+                        const progress = Math.round(((i + 1) / mappings.length) * 100);
+                        $('#testProgress').css('width', progress + '%');
+                        $('#testProgress').text(`${progress}% - Testing ${displayName}`);
+
+                        try {
+                            const testData = {
+                                ipAddress: ip,
+                                port: port,
+                                slaveId: slaveId,
+                                testRegister: registerAddress,
+                                timeoutMs: readTimeout,
+                                connectionTimeout: connectionTimeout
+                            };
+
+                            const response = await fetch('/api/modbus/tcp/test', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify(testData)
+                            });
+
+                            let success = false;
+                            let value = null;
+                            let error = null;
+                            let suggestion = null;
+                            let diagnostics = [];
+
+                            if (response.ok) {
+                                const result = await response.json();
+                                success = result.isSuccessful;
+                                value = result.testValue;
+                                diagnostics = result.diagnostics || [];
+
+                                if (!success) {
+                                    
+                                    const failing = diagnostics.find(d => !d.isPassed);
+                                    if (failing) {
+                                        error = failing.message;
+                                        suggestion = failing.suggestion || null;
+
+                                      
+                                        const key = `${failing.name}:${failing.message}`;
+                                        if (!diagnosticsByReason.has(key)) {
+                                            diagnosticsByReason.set(key, { diagnostics, registers: [mappingName] });
+                                        } else {
+                                            diagnosticsByReason.get(key).registers.push(mappingName);
+                                        }
+                                    } else {
+                                        
+                                        error = result.errorDetails || result.message || 'Test failed';
+                                    }
+                                }
+                            } else {
+                                error = `HTTP ${response.status} — request to test API failed`;
+                            }
+
+                            results.push({
+                                mapping, registerAddress, mappingName, displayName, dataType, unit,
+                                success, value, error, suggestion
+                            });
+
+                            success ? passedCount++ : failedCount++;
+
+                        } catch (error) {
+                            results.push({
+                                mapping, registerAddress, mappingName, displayName, dataType, unit,
+                                success: false, value: null, error: error.message, suggestion: null
+                            });
+                            failedCount++;
+                        }
+                    }
+
+                    // STEP 3: Display results
+                    const allPassed = failedCount === 0;
+
+                    let html = `
+                        <div class="alert ${allPassed ? 'alert-success' : 'alert-warning'}">
+                            <h5><i class="fas ${allPassed ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                                ${allPassed ? 'All registers passed!' : `${failedCount} of ${mappings.length} registers failed`}
+                            </h5>
+                            <div class="row mt-2">
+                                <div class="col-md-4">
+                                    <small class="text-muted">Device</small>
+                                    <br /><strong>${esc(name)}</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Total Registers</small>
+                                    <br /><strong>${mappings.length}</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Passed</small>
+                                    <br /><strong>${passedCount} / ${mappings.length}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Show diagnostics grouped by distinct failure reason
+                    if (!allPassed && diagnosticsByReason.size > 0) {
+                        html += `
+                            <div class="mt-3">
+                                <h6><i class="fas fa-list-check"></i> Diagnostic Details (${diagnosticsByReason.size} distinct failure reason${diagnosticsByReason.size > 1 ? 's' : ''})</h6>
+                        `;
+
+                        for (const [, group] of diagnosticsByReason) {
+                            const affected = group.registers;
+                            const affectedLabel = affected.length > 3
+                                ? `${affected.slice(0, 3).map(esc).join(', ')} +${affected.length - 3} more`
+                                : affected.map(esc).join(', ');
+
+                            html += `
+                                <table class="table table-sm table-striped table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 15%;">Step</th>
+                                            <th style="width: 10%;">Status</th>
+                                            <th style="width: 30%;">Message</th>
+                                            <th style="width: 25%;">Suggestion</th>
+                                            <th style="width: 20%;">Affected Registers</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${group.diagnostics.map((d, idx) => `
+                                            <tr class="${d.isPassed ? 'table-success' : 'table-danger'}">
+                                                <td><strong>${esc(d.name)}</strong></td>
+                                                <td class="text-center">
+                                                    ${d.isPassed
+                                                        ? '<span class="badge bg-success"><i class="fas fa-check"></i> Pass</span>'
+                                                        : '<span class="badge bg-danger"><i class="fas fa-times"></i> Fail</span>'}
+                                                </td>
+                                                <td>${esc(d.message)}</td>
+                                                <td>${esc(d.suggestion || '-')}</td>
+                                                <td>${idx === 0 ? `<small>${esc(affectedLabel)} (${affected.length})</small>` : ''}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            `;
+                        }
+
+                        html += `</div>`;
+                    }
+
+                    // Show results table
+                    html += `
+                        <div class="mt-3">
+                            <h6><i class="fas fa-list"></i> Register Test Results (${mappings.length})</h6>
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-sm table-striped table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Name</th>
+                                            <th>Address</th>
+                                            <th>Type</th>
+                                            <th>Status</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${results.map((r, index) => `
+                                            <tr class="${r.success ? 'table-success' : 'table-danger'}">
+                                                <td>${index + 1}</td>
+                                                <td><strong>${esc(r.mappingName)}</strong></td>
+                                                <td><span class="badge bg-secondary">${esc(r.registerAddress)}</span></td>
+                                                <td><span class="badge bg-info">${esc(r.dataType)}</span></td>
+                                                <td>
+                                                    ${r.success
+                                                        ? '<span class="badge bg-success"><i class="fas fa-check"></i> Pass</span>'
+                                                        : '<span class="badge bg-danger"><i class="fas fa-times"></i> Fail</span>'}
+                                                </td>
+                                                <td>
+                                                    ${r.success
+                                                        ? `${esc(r.value)} ${esc(r.unit || '')}`
+                                                        : `<span class="text-danger">${esc(r.error || 'Unknown error')}</span>${
+                                                            r.suggestion
+                                                                ? `<br /><small class="text-muted"><i class="fas fa-lightbulb"></i> ${esc(r.suggestion)}</small>`
+                                                                : ''
+                                                          }`}
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+
+                    contentDiv.html(html);
+
+                    // Enable save button ONLY if all registers passed
+                    if (allPassed) {
+                        saveBtn.prop('disabled', false);
+                        saveBtn.removeClass('btn-secondary').addClass('btn-success');
+                    }
+
+                } catch (error) {
+                    console.error('Test error:', error);
+                    contentDiv.html(`
+                        <div class="alert alert-danger">
+                            <h5><i class="fas fa-exclamation-triangle"></i> Test Error</h5>
+                            <p>${esc(error.message)}</p>
+                            <hr />
+                            <small class="text-muted">
+                                Make sure the API is running: /api/modbus/tcp/test
+                            </small>
+                        </div>
+                    `);
+                } finally {
+                    btn.prop('disabled', false);
+                    btn.html('<i class="fas fa-vial"></i> Test All Registers');
+                }
+            });
+
+            // 
+            // SAVE DEVICE
+            // 
+            $('#saveBtn').click(async function() {
+                const btn = $(this);
+                btn.prop('disabled', true);
+                btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+                try {
+                    const response = await fetch('/Devices/Create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: $('#Name').val().trim(),
+                            deviceTypeName: $('#DeviceTypeName').val(),
+                            ipAddress: $('#IpAddress').val().trim(),
+                            port: parseInt($('#Port').val()),
+                            slaveId: parseInt($('#SlaveId').val()),
+                            connectionTimeout: parseInt($('#ConnectionTimeout').val()),
+                            readTimeout: parseInt($('#ReadTimeout').val()),
+                            writeTimeout: parseInt($('#WriteTimeout').val()),
+                            protocol: 1
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        toastr.success(result.message);
+                        setTimeout(() => {
+                            window.location.href = '/Devices';
+                        }, 1000);
+                    } else {
+                        toastr.error('Save failed: ' + result.message);
+                        btn.prop('disabled', false);
+                        btn.html('<i class="fas fa-save"></i> Create Device');
+                    }
+                } catch (error) {
+                    toastr.error('Save error: ' + error.message);
+                    btn.prop('disabled', false);
+                    btn.html('<i class="fas fa-save"></i> Create Device');
+                }
+            });
+
+            // 
+            // REAL-TIME VALIDATION
+            // 
+            $('#Name, #DeviceTypeName, #IpAddress, #Port, #SlaveId, #ReadTimeout, #WriteTimeout, #ConnectionTimeout').on('input change', function() {
+                $('#testResults').hide();
+                $('#saveBtn').prop('disabled', true);
+            });
+
+            // 
+            // LOG INITIAL STATE
+            // 
+            console.log('Initial form state:');
+            console.log('Device Type dropdown has options:', $('#DeviceTypeName option').length);
+            console.log('Selected value:', $('#DeviceTypeName').val());
+        });
+    </script>
+}
